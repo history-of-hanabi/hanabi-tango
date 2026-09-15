@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>花火English単語帳</title>
+<meta name="description" content="日本の花火の意味・見方・ルールを、外国人に説明できる英語表現とセットで暗記できる単語帳アプリ。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎆</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0e1526;
+    --card-navy:#16213d;
+    --line:#2a3a5c;
+    --gold:#f2b544;
+    --ember:#ff6a45;
+    --text:#f4f1ea;
+    --text-dim:#9aabc9;
+    --known:#3a8f6b;
+    --unknown:#d9506a;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0; min-height:100vh;
+    background:linear-gradient(180deg,#0e1526,#0a0f1c);
+    color:var(--text);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    padding:22px 16px 40px;
+  }
+  .app{ max-width:440px; margin:0 auto; }
+
+  header{ text-align:center; margin-bottom:16px; }
+  header h1{ font-family:'Shippori Mincho', serif; font-size:1.3rem; margin:0 0 4px; }
+  header p{ margin:0; font-size:0.76rem; color:var(--text-dim); line-height:1.6; }
+
+  .progress-wrap{ margin-bottom:16px; }
+  .progress-top{ display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-dim); margin-bottom:6px; }
+  .progress-top b{ color:var(--gold); }
+  .progress-track{ height:8px; border-radius:999px; background:#1c2740; overflow:hidden; }
+  .progress-fill{ height:100%; background:linear-gradient(90deg, var(--ember), var(--gold)); transition:width 0.35s ease; }
+
+  .cat-scroller{ display:flex; gap:6px; overflow-x:auto; margin-bottom:16px; padding-bottom:2px; }
+  .cat-chip{
+    flex-shrink:0; padding:7px 13px; border-radius:999px; border:1px solid var(--line);
+    background:var(--card-navy); color:var(--text-dim); font-size:0.75rem; cursor:pointer; white-space:nowrap;
+  }
+  .cat-chip.active{ background:linear-gradient(135deg, var(--ember), var(--gold)); color:#1a1208; border-color:transparent; font-weight:700; }
+
+  .card-stage{ perspective:1200px; margin-bottom:16px; }
+  .flip-card{
+    position:relative; width:100%; height:260px;
+    transform-style:preserve-3d; transition:transform 0.45s ease;
+    cursor:pointer;
+  }
+  .flip-card.flipped{ transform:rotateY(180deg); }
+  .face{
+    position:absolute; inset:0; backface-visibility:hidden;
+    border-radius:20px; border:1px solid var(--line);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:26px 22px; text-align:center;
+  }
+  .face-front{ background:var(--card-navy); }
+  .face-back{ background:#1c1420; transform:rotateY(180deg); border-color:#3a2a3e; }
+
+  .cat-tag{ font-size:0.68rem; color:var(--gold); margin-bottom:14px; }
+  .term-jp{ font-family:'Shippori Mincho', serif; font-size:1.7rem; font-weight:700; margin-bottom:8px; }
+  .term-romaji{ font-size:0.85rem; color:var(--text-dim); }
+  .tap-hint{ position:absolute; bottom:14px; font-size:0.65rem; color:var(--text-dim); }
+
+  .term-en{ font-size:1.02rem; line-height:1.7; }
+
+  .swipe-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .nav-btn{
+    width:44px; height:44px; border-radius:50%; border:1px solid var(--line);
+    background:var(--card-navy); color:var(--text); font-size:1.1rem; cursor:pointer;
+  }
+  .mark-row{ display:flex; gap:10px; flex:1; margin:0 14px; }
+  .mark-row button{
+    flex:1; padding:13px 0; border-radius:14px; border:none; font-weight:700; font-size:0.85rem; cursor:pointer;
+  }
+  .mark-unknown{ background:rgba(217,80,106,0.15); color:var(--unknown); border:1px solid rgba(217,80,106,0.4) !important; }
+  .mark-known{ background:rgba(58,143,107,0.15); color:var(--known); border:1px solid rgba(58,143,107,0.4) !important; }
+
+  .swipe-note{ text-align:center; font-size:0.7rem; color:var(--text-dim); margin-bottom:6px; }
+
+  .status-note{ text-align:center; font-size:0.78rem; color:var(--text-dim); padding:30px 0; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <h1>花火English単語帳</h1>
+    <p>日本の花火の意味・見方・ルールを、外国人にそのまま説明できる英語表現とセットで覚えます。</p>
+  </header>
+
+  <div class="progress-wrap">
+    <div class="progress-top"><span>学習の進み具合</span><b id="progressPct">0%</b></div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%;"></div></div>
+  </div>
+
+  <div class="cat-scroller" id="catScroller"></div>
+
+  <div id="cardArea">
+    <div class="card-stage">
+      <div class="flip-card" id="flipCard">
+        <div class="face face-front">
+          <div class="cat-tag" id="catTagFront"></div>
+          <div class="term-jp" id="termJp"></div>
+          <div class="term-romaji" id="termRomaji"></div>
+          <div class="tap-hint">タップして意味を見る</div>
+        </div>
+        <div class="face face-back">
+          <div class="cat-tag" id="catTagBack">ENGLISH</div>
+          <div class="term-en" id="termEn"></div>
+          <div class="tap-hint">タップして戻る</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="swipe-note">左右にスワイプ、または矢印で次のカードへ</p>
+    <div class="swipe-row">
+      <button class="nav-btn" id="prevBtn">‹</button>
+      <div class="mark-row">
+        <button class="mark-unknown" id="unknownBtn">まだ</button>
+        <button class="mark-known" id="knownBtn">覚えた</button>
+      </div>
+      <button class="nav-btn" id="nextBtn">›</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---------- 単語データ(花火を外国人に説明するための表現) ----------
+  const CARDS = [
+    // 意味・込める想い
+    { cat: '意味・想い', jp: '奉納', romaji: 'hōnō', en: 'To dedicate or offer something — like fireworks — to a shrine or deity, as an act of worship or gratitude.' },
+    { cat: '意味・想い', jp: '慰霊', romaji: 'irei', en: 'To console and honor the souls of the dead, for example victims of war, disasters, or epidemics.' },
+    { cat: '意味・想い', jp: '鎮魂', romaji: 'chinkon', en: 'A prayer to calm and pacify spirits, often expressed through fireworks at memorial events.' },
+    { cat: '意味・想い', jp: '悪疫退散', romaji: 'akueki taisan', en: 'A wish to drive away disease and plague — one of the reasons early Japanese fireworks displays are said to have begun.' },
+    { cat: '意味・想い', jp: '五穀豊穣', romaji: 'gokoku hōjō', en: 'A prayer for a bountiful harvest — one of the traditional wishes behind votive fireworks.' },
+    { cat: '意味・想い', jp: '感謝', romaji: 'kansha', en: 'Gratitude — many fireworks displays are held as a way of saying thank you, to gods, ancestors, or a community.' },
+
+    // イベント花火・奉納花火・慰霊/鎮魂花火
+    { cat: '花火の種類', jp: 'イベント花火', romaji: 'ibento hanabi', en: 'Fireworks held mainly for entertainment and community celebration, like summer festivals.' },
+    { cat: '花火の種類', jp: '奉納花火', romaji: 'hōnō hanabi', en: 'Fireworks offered to a shrine as a religious act, often praying for a good harvest, safety, or giving thanks to the gods.' },
+    { cat: '花火の種類', jp: '慰霊花火', romaji: 'irei hanabi', en: 'Fireworks launched to console the souls of the deceased, often held on the anniversary of a war, disaster, or accident.' },
+    { cat: '花火の種類', jp: '鎮魂花火', romaji: 'chinkon hanabi', en: 'Fireworks meant to pacify spirits and pray for peace, closely related to memorial fireworks.' },
+    { cat: '花火の種類', jp: '奉納煙火', romaji: 'hōnō enka', en: 'Another term for votive fireworks — "enka" is a more formal word for fireworks, often used in shrine contexts.' },
+
+    // 特徴・見方
+    { cat: '特徴・見方', jp: '尺玉', romaji: 'shakudama', en: 'A large firework shell about 30cm in diameter — one of the most iconic sizes at Japanese festivals.' },
+    { cat: '特徴・見方', jp: '号数', romaji: 'gōsū', en: 'The unit used to classify the size of a firework shell — the bigger the number, the bigger the shell.' },
+    { cat: '特徴・見方', jp: '菊', romaji: 'kiku (chrysanthemum type)', en: 'A firework type that opens like a chrysanthemum, leaving trailing sparks as it expands.' },
+    { cat: '特徴・見方', jp: '牡丹', romaji: 'botan (peony type)', en: 'A firework type that opens in a round shape without trailing sparks.' },
+    { cat: '特徴・見方', jp: 'スターマイン', romaji: 'sutāmain', en: 'A rapid, continuous series of fireworks launched from multiple tubes, often used as a finale.' },
+    { cat: '特徴・見方', jp: '光と音のずれ', romaji: 'hikari to oto no zure', en: 'Because light travels far faster than sound, you see a firework bloom before you hear its boom.' },
+    { cat: '特徴・見方', jp: '花火大会', romaji: 'hanabi taikai', en: 'A fireworks festival — one of the most popular summer events in Japan.' },
+    { cat: '特徴・見方', jp: '打ち上げ筒', romaji: 'uchiage-zutsu', en: 'The launch tube a firework shell is fired from.' },
+
+    // ルール・マナー
+    { cat: 'ルール・マナー', jp: '場所取り', romaji: 'basho-tori', en: 'Reserving a viewing spot, often with a picnic sheet, hours before the show starts.' },
+    { cat: 'ルール・マナー', jp: '打ち上げ場所', romaji: 'uchiage basho', en: 'The designated launch area — staying a safe distance away from it is important.' },
+    { cat: 'ルール・マナー', jp: '交通規制', romaji: 'kōtsū kisei', en: 'Traffic control — roads near the festival are often closed to vehicles for crowd safety.' },
+    { cat: 'ルール・マナー', jp: 'ゴミは持ち帰る', romaji: 'gomi wa mochikaeru', en: 'Take your trash home with you — a common courtesy expected at Japanese festivals.' },
+    { cat: 'ルール・マナー', jp: '浴衣', romaji: 'yukata', en: 'A casual, light cotton kimono often worn to summer festivals and fireworks shows.' },
+    { cat: 'ルール・マナー', jp: '屋台', romaji: 'yatai', en: 'Food stalls lining the streets near a festival, selling snacks like takoyaki and shaved ice.' },
+
+    // 文化・言葉
+    { cat: '文化・言葉', jp: '花・火の意味', romaji: 'hana / hi', en: '"Hana" means flower, and "hi" means fire. Hanabi literally means "fire flowers" — flowers made of fire, blooming for just a moment in the night sky.' },
+    { cat: '文化・言葉', jp: 'Hanabi ≠ Fireworks', romaji: '—', en: 'Many Japanese fans feel the word "fireworks" doesn\'t fully capture hanabi — it carries a deeper sense of fleeting beauty, memory, and prayer, not just spectacle. That\'s why many people now just say "hanabi" in English too.' },
+    { cat: '文化・言葉', jp: '手向けの花', romaji: 'tamuke no hana', en: 'Flowers offered at a grave or altar for the dead. Some see a symbolic kinship between hanabi and these offerings — both are a beautiful, fleeting gift, whether to console spirits or celebrate the living.' },
+    { cat: '文化・言葉', jp: '火薬の伝来', romaji: 'kayaku no denrai', en: 'Gunpowder is believed to have reached Japan around 1543, when matchlock guns arrived at Tanegashima island — the technology that, generations later, made hanabi possible.' },
+    { cat: '文化・言葉', jp: '花火の始まり', romaji: 'hanabi no hajimari', en: 'One of the earliest recorded fireworks displays in Japan is said to have been watched by shogun Tokugawa Ieyasu in 1613, at Sunpu Castle.' },
+    { cat: '文化・言葉', jp: 'たまや〜、かぎや〜', romaji: 'Tamaya, Kagiya', en: 'A traditional cheer shouted at fireworks shows, named after two Edo-period fireworks makers. Shouting it is like cheering "bravo!" at a beautiful shell.' },
+
+    // 特徴・見方(追加)
+    { cat: '特徴・見方', jp: '一輪の花', romaji: 'ichirin no hana', en: 'Some shells are designed to bloom like a single, perfect flower — a deliberate, elegant contrast to busier, flashier effects.' },
+    { cat: '特徴・見方', jp: '実在の花モチーフ', romaji: 'jitsuzai no hana motif', en: 'Beyond kiku and botan, some shells are designed to resemble specific real flowers, like ajisai (hydrangea) or tokeisō (passion flower), matching their color and shape.' },
+    { cat: '特徴・見方', jp: '昇り曲導', romaji: 'nobori kyokudō', en: 'Effects added while a shell is still climbing — after launch, before it opens. If the burst itself is the flower, this ascent effect is like the stem and leaves leading up to it.' },
+    { cat: '特徴・見方', jp: '朴・小花・分花', romaji: 'hō / kobana / bunka', en: 'Specific named effects used during a shell\'s climb (part of the nobori kyokudō family) — different ways of decorating the ascent before the shell blooms.' },
+    { cat: '特徴・見方', jp: '線香花火', romaji: 'senkō hanabi', en: 'A traditional hand-held sparkler made from a twist of paper. Valued for its delicate, quiet sparks rather than being flashy.' },
+
+    // 職人の技
+    { cat: '職人の技', jp: '芯入り割物', romaji: 'shin-iri warimono', en: 'A shell with a separate colored core at its center, so it appears to change color the instant it opens — a sign of precise, skilled construction.' },
+    { cat: '職人の技', jp: '八重芯', romaji: 'yae-shin', en: 'A shell built with a double core, so it opens into two concentric rings of color — a step up in difficulty from a single core.' },
+    { cat: '職人の技', jp: '多重芯', romaji: 'tajū-shin', en: 'A shell with three or more nested cores, opening into several concentric rings at once — one of the most technically demanding shells to build.' },
+    { cat: '職人の技', jp: '変化星', romaji: 'henka-boshi', en: 'A "star" (the burning pellet inside a shell) engineered to change color partway through its burn — a sign of highly skilled formulation, since each color layer has to burn at just the right time.' },
+    { cat: '職人の技', jp: '四尺玉', romaji: 'yonshakudama', en: 'An enormous shell about 120cm across, fired from its own dedicated mortar tube — which is sometimes anchored by burying it in a hole in the ground for stability. A display of extreme large-shell technique, seen at Niigata\'s Katakai Festival.' },
+
+    // 珍しい花火・仕掛け
+    { cat: '珍しい花火', jp: 'ビラ玉', romaji: 'biradama', en: 'A shell that scatters small paper strips or flyers into the air as it opens — sometimes used for advertising or as a festive effect. Rarely seen today.' },
+    { cat: '珍しい花火', jp: '落下傘', romaji: 'rakkasan', en: 'A shell effect where a small lit flare slowly drifts down attached to a tiny parachute, leaving a long, lingering point of light in the sky. Rarely seen today.' },
+    { cat: '珍しい花火', jp: '昼花火', romaji: 'hiru hanabi', en: 'Fireworks launched during the daytime — for example, on the morning of an undōkai (school sports day), where the loud bangs announce and celebrate the event rather than being watched for their light.' },
+    { cat: '珍しい花火', jp: '合図玉・号砲', romaji: 'aizudama / gōhō', en: 'A shell or shot valued mainly for its loud bang rather than any visual effect — often heard on the morning of an undōkai (sports day) to signal that the event is starting.' },
+    { cat: '珍しい花火', jp: '狼煙', romaji: 'noroshi', en: 'In the fireworks world today, this word is often used as another name for hiru hanabi (daytime fireworks). Historically, it refers to smoke signals used as a communication method during Japan\'s Sengoku (Warring States) period.' },
+    { cat: '珍しい花火', jp: '煙玉・煙幕', romaji: 'kemuridama / enmaku', en: 'Shells or devices that produce colored smoke rather than light — sometimes used in daytime fireworks or as a ground-level visual effect. Rarely seen today.' },
+    { cat: '珍しい花火', jp: '手筒花火', romaji: 'tezutsu hanabi', en: 'A bold, valiant style where a performer holds a large bamboo tube against their body until it burns all the way through, shooting a tall column of sparks and flame. Especially popular in Japan\'s Mikawa region.' },
+    { cat: '珍しい花火', jp: '旗物', romaji: 'hatamono', en: 'A rare daytime firework: it releases a small banner (nobori-bata) high in the sky, suspended and unfurled by a parachute. Rarely seen today — it demands deep experience and skill to pull off.' },
+    { cat: '珍しい花火', jp: '袋物', romaji: 'fukuromono', en: 'A close relative of hatamono: also a daytime firework releasing a payload aloft, but here it\'s a weighted, bag-shaped parachute instead of a banner. Just as rare today, and just as demanding to make.' }
+  ];
+
+  const STORAGE_KEY = 'hanabi-tango-progress';
+
+  function loadProgress(){
+    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+    catch(e){ return {}; }
+  }
+  function saveProgress(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); }
+
+  let progress = loadProgress(); // { "jp term": 'known' | 'unknown' }
+  let activeCategory = 'すべて';
+  let currentDeck = [];
+  let currentIndex = 0;
+  let isFlipped = false;
+
+  const CATEGORIES = ['すべて', ...Array.from(new Set(CARDS.map(c => c.cat)))];
+
+  function cardKey(card){ return card.jp; }
+
+  function buildDeck(){
+    currentDeck = activeCategory === 'すべて' ? [...CARDS] : CARDS.filter(c => c.cat === activeCategory);
+  }
+
+  function pickWeightedIndex(excludeIndex){
+    // 覚えていないカード・未学習カードを優先して出題する重み付け
+    const weights = currentDeck.map(card => {
+      const status = progress[cardKey(card)];
+      if(status === 'known') return 1;
+      return 3; // 未学習 or 'unknown'
+    });
+    const total = weights.reduce((a,b) => a+b, 0);
+    let tries = 0;
+    while(tries < 20){
+      let r = Math.random() * total;
+      let idx = 0;
+      for(; idx < weights.length; idx++){
+        if(r < weights[idx]) break;
+        r -= weights[idx];
+      }
+      if(idx !== excludeIndex || currentDeck.length === 1) return idx;
+      tries++;
+    }
+    return 0;
+  }
+
+  function renderCategories(){
+    const scroller = document.getElementById('catScroller');
+    scroller.innerHTML = CATEGORIES.map(cat =>
+      `<button type="button" class="cat-chip ${cat === activeCategory ? 'active' : ''}" data-cat="${cat}">${cat}</button>`
+    ).join('');
+  }
+
+  function renderProgress(){
+    const known = currentDeck.filter(c => progress[cardKey(c)] === 'known').length;
+    const pct = currentDeck.length ? Math.round((known / currentDeck.length) * 100) : 0;
+    document.getElementById('progressPct').textContent = `${pct}%(${known}/${currentDeck.length})`;
+    document.getElementById('progressFill').style.width = `${pct}%`;
+  }
+
+  function renderCard(){
+    if(currentDeck.length === 0){
+      document.getElementById('cardArea').innerHTML = '<p class="status-note">このカテゴリーにはカードがありません。</p>';
+      return;
+    }
+    const card = currentDeck[currentIndex];
+    document.getElementById('catTagFront').textContent = card.cat;
+    document.getElementById('termJp').textContent = card.jp;
+    document.getElementById('termRomaji').textContent = card.romaji;
+    document.getElementById('termEn').textContent = card.en;
+
+    const flipCard = document.getElementById('flipCard');
+    isFlipped = false;
+    flipCard.classList.remove('flipped');
+
+    renderProgress();
+  }
+
+  function goToNext(){
+    if(currentDeck.length === 0) return;
+    currentIndex = pickWeightedIndex(currentIndex);
+    renderCard();
+  }
+  function goToPrev(){
+    if(currentDeck.length === 0) return;
+    currentIndex = (currentIndex - 1 + currentDeck.length) % currentDeck.length;
+    renderCard();
+  }
+
+  // ---------- カテゴリー切り替え ----------
+  document.getElementById('catScroller').addEventListener('click', (e) => {
+    const btn = e.target.closest('.cat-chip');
+    if(!btn) return;
+    activeCategory = btn.dataset.cat;
+    renderCategories();
+    buildDeck();
+    currentIndex = 0;
+    renderCard();
+  });
+
+  // ---------- カードのタップで反転 ----------
+  document.getElementById('flipCard').addEventListener('click', () => {
+    isFlipped = !isFlipped;
+    document.getElementById('flipCard').classList.toggle('flipped', isFlipped);
+  });
+
+  // ---------- 覚えた/まだ ----------
+  document.getElementById('knownBtn').addEventListener('click', () => {
+    const card = currentDeck[currentIndex];
+    progress[cardKey(card)] = 'known';
+    saveProgress();
+    goToNext();
+  });
+  document.getElementById('unknownBtn').addEventListener('click', () => {
+    const card = currentDeck[currentIndex];
+    progress[cardKey(card)] = 'unknown';
+    saveProgress();
+    goToNext();
+  });
+
+  // ---------- 矢印ボタン ----------
+  document.getElementById('nextBtn').addEventListener('click', goToNext);
+  document.getElementById('prevBtn').addEventListener('click', goToPrev);
+
+  // ---------- スワイプ ----------
+  let touchStartX = null;
+  const cardStage = document.querySelector('.card-stage');
+  cardStage.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+  });
+  cardStage.addEventListener('touchend', (e) => {
+    if(touchStartX === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if(Math.abs(dx) > 50){
+      if(dx < 0) goToNext(); else goToPrev();
+    }
+    touchStartX = null;
+  });
+
+  // ---------- 初期化 ----------
+  renderCategories();
+  buildDeck();
+  renderCard();
+</script>
+
+</body>
+</html>
